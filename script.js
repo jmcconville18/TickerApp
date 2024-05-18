@@ -1,3 +1,6 @@
+const apiKey = '688e77c8723821db62ddccb30bfb7630';
+const baseUrl = 'https://api.openweathermap.org/data/2.5/onecall';
+
 async function getWeather() {
     const zipCode = document.getElementById('zipCode').value;
     const output = document.getElementById('output');
@@ -19,12 +22,12 @@ async function getWeather() {
         }
 
         const { lat, lon } = geoData[0];
-        const weatherUrl = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&units=imperial&appid=688e77c8723821db62ddccb30bfb7630`;
+        const weatherUrl = `${baseUrl}?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`;
 
         const weatherResponse = await fetch(weatherUrl);
 
         if (!weatherResponse.ok) {
-            throw new Error(`Error: ${weatherResponse.status} ${weatherResponse.statusText}`);
+            throw new Error(`Error: ${weatherResponse.status} ${weatherResponse.statusText} - URL: ${weatherUrl}`);
         }
 
         const weatherData = await weatherResponse.json();
