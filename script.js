@@ -33,26 +33,30 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   async function fetchWeatherData(zipcode) {
-    const geocodeApiUrl = `https://api.zippopotam.us/us/${zipcode}`;
-    const geocodeResponse = await fetch(geocodeApiUrl);
-    if (!geocodeResponse.ok) {
-      alert('Failed to fetch location coordinates');
+    try {
+      const geocodeApiUrl = `https://api.zippopotam.us/us/${zipcode}`;
+      const geocodeResponse = await fetch(geocodeApiUrl);
+      if (!geocodeResponse.ok) {
+        throw new Error('Failed to fetch location coordinates');
+      }
+
+      const geocodeData = await geocodeResponse.json();
+      const { latitude, longitude, 'place name': city, state } = geocodeData.places[0];
+      const weatherApiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,precipitation,weathercode,wind_speed_10m,humidity_2m,cloudcover,surface_pressure&daily=sunrise,sunset,uv_index_max&timezone=auto`;
+      const weatherResponse = await fetch(weatherApiUrl);
+      if (!weatherResponse.ok) {
+        throw new Error('Failed to fetch weather data');
+      }
+
+      const weatherData = await weatherResponse.json();
+      weatherData.city = city;
+      weatherData.state = state;
+      return weatherData;
+    } catch (error) {
+      console.error(error);
+      alert(error.message);
       return null;
     }
-
-    const geocodeData = await geocodeResponse.json();
-    const { latitude, longitude, 'place name': city, state } = geocodeData.places[0];
-    const weatherApiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,precipitation,weathercode,wind_speed_10m,humidity_2m,cloudcover,surface_pressure&daily=sunrise,sunset,uv_index_max&timezone=auto`;
-    const weatherResponse = await fetch(weatherApiUrl);
-    if (!weatherResponse.ok) {
-      alert('Failed to fetch weather data');
-      return null;
-    }
-
-    const weatherData = await weatherResponse.json();
-    weatherData.city = city;
-    weatherData.state = state;
-    return weatherData;
   }
 
   function displayWeather(data) {
