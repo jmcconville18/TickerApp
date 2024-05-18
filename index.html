@@ -3,22 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather App</title>
+    <title>Weather and Stocks App</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/2.3.0/luxon.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>Weather App</h1>
-        <input type="text" id="zipCode" placeholder="Enter Zip Code" value="06033"> <!-- Default value set to 10001 -->
-        <button onclick="getWeather()">Get Weather</button>
-        <button onclick="getForecast()">Get Forecast</button>
-        <button onclick="toggleView()">Toggle JSON/Formatted View</button>
-        <div id="output"></div>
+        <h1>Weather and Stocks App</h1>
+        
+        <!-- Weather Section -->
+        <div id="weather-section">
+            <h2>Weather</h2>
+            <input type="text" id="zipCode" placeholder="Enter Zip Code" value="06033">
+            <button onclick="getWeather()">Get Weather</button>
+            <button onclick="getForecast()">Get Forecast</button>
+            <button onclick="toggleView()">Toggle JSON/Formatted View</button>
+            <div id="output"></div>
+        </div>
+        
+        <!-- Stocks Section -->
+        <div id="stocks-section">
+            <h2>Stocks and Funds</h2>
+            <div id="stocks-input">
+                <input type="text" placeholder="Enter Stock Symbol" class="stock-symbol">
+                <button onclick="addStock()">Add Stock</button>
+            </div>
+            <div id="stocks-output"></div>
+            <button onclick="getStockData()">Get Stock Data</button>
+            <button onclick="toggleStockView()">Toggle JSON/Formatted View</button>
+        </div>
     </div>
     <script src="config.js"></script>
     <script src="weather.js"></script>
     <script src="forecast.js"></script>
+    <script src="stocks.js"></script>
     <script src="toggle.js"></script>
 </body>
 </html>

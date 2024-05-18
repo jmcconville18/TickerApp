@@ -6,7 +6,7 @@ body {
     height: 100vh;
     margin: 0;
     background-color: #f0f0f0;
-    overflow: auto; /* Ensure the body can scroll */
+    overflow: auto;
 }
 
 .container {
@@ -15,8 +15,8 @@ body {
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    max-height: 90vh; /* Ensure the container doesn't exceed viewport height */
-    overflow-y: auto; /* Enable scrolling inside the container */
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 input {
@@ -40,14 +40,18 @@ button:hover {
     background-color: #0056b3;
 }
 
-#output {
+#output, #stocks-output {
     margin-top: 20px;
     text-align: left;
-    white-space: pre-wrap; /* Preserve formatting for JSON output */
+    white-space: pre-wrap;
 }
 
-.weather-attribute {
-    margin: 0; /* Remove margins to eliminate spaces between lines */
-    padding: 0; /* Ensure padding is also zero */
-    line-height: 1; /* Adjust line height for tighter spacing */
+.weather-attribute, .stock-attribute {
+    margin: 0;
+    padding: 0;
+    line-height: 1.5;
+}
+
+.stock-input {
+    margin-bottom: 10px;
 }
