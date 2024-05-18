@@ -49,7 +49,15 @@ function formatForecastData(data) {
     const days = {};
 
     data.list.forEach(item => {
-        const date = DateTime.fromSeconds(item.dt).toFormat('yyyy-MM-dd');
+        const dateTime = DateTime.fromSeconds(item.dt).toFormat('yyyy-MM-dd h a');
+        const [date, time] = dateTime.split(' ');
+        const hour = DateTime.fromSeconds(item.dt).hour;
+
+        // Filter out 2 AM, 5 AM, 11 PM
+        if ([2, 5, 23].includes(hour)) {
+            return;
+        }
+
         if (!days[date]) {
             days[date] = {
                 high: item.main.temp_max,
@@ -60,7 +68,7 @@ function formatForecastData(data) {
             days[date].high = Math.max(days[date].high, item.main.temp_max);
             days[date].low = Math.min(days[date].low, item.main.temp_min);
         }
-        days[date].descriptions.push(item.weather[0].description);
+        days[date].descriptions.push(`${time} ${DateTime.fromSeconds(item.dt).toFormat('a')} - ${item.weather[0].description}`);
     });
 
     let formattedData = '<h2>5-Day Forecast</h2>';
@@ -81,7 +89,15 @@ function formatJsonForecastData(data) {
     const days = {};
 
     data.list.forEach(item => {
-        const date = DateTime.fromSeconds(item.dt).toFormat('yyyy-MM-dd');
+        const dateTime = DateTime.fromSeconds(item.dt).toFormat('yyyy-MM-dd h a');
+        const [date, time] = dateTime.split(' ');
+        const hour = DateTime.fromSeconds(item.dt).hour;
+
+        // Filter out 2 AM, 5 AM, 11 PM
+        if ([2, 5, 23].includes(hour)) {
+            return;
+        }
+
         if (!days[date]) {
             days[date] = {
                 high: item.main.temp_max,
@@ -92,7 +108,7 @@ function formatJsonForecastData(data) {
             days[date].high = Math.max(days[date].high, item.main.temp_max);
             days[date].low = Math.min(days[date].low, item.main.temp_min);
         }
-        days[date].descriptions.push(item.weather[0].description);
+        days[date].descriptions.push(`${time} ${DateTime.fromSeconds(item.dt).toFormat('a')} - ${item.weather[0].description}`);
     });
 
     return JSON.stringify(days, null, 2);
