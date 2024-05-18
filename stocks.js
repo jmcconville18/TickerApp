@@ -1,5 +1,7 @@
 const alphaVantageApiKey = 'your_alpha_vantage_api_key';
 
+document.addEventListener('DOMContentLoaded', loadStocks);
+
 function addStock() {
     const stockInput = document.createElement('div');
     stockInput.classList.add('stock-input');
@@ -12,6 +14,25 @@ function addStock() {
 
 function removeStock(button) {
     button.parentElement.remove();
+    saveStocks();
+}
+
+function saveStocks() {
+    const stockSymbols = Array.from(document.getElementsByClassName('stock-symbol')).map(input => input.value);
+    localStorage.setItem('stocks', JSON.stringify(stockSymbols));
+}
+
+function loadStocks() {
+    const storedStocks = JSON.parse(localStorage.getItem('stocks')) || [];
+    storedStocks.forEach(symbol => {
+        const stockInput = document.createElement('div');
+        stockInput.classList.add('stock-input');
+        stockInput.innerHTML = `
+            <input type="text" placeholder="Enter Stock Symbol" class="stock-symbol" value="${symbol}">
+            <button onclick="removeStock(this)">Remove</button>
+        `;
+        document.getElementById('stocks-input').appendChild(stockInput);
+    });
 }
 
 async function getStockData() {
