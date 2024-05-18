@@ -62,10 +62,10 @@ function formatWeatherData(data, timezone) {
 
     return `
         <h2>Current Weather</h2>
-        <div class="weather-attribute"><strong>Temperature:</strong> ${main.temp} °F</div>
-        <div class="weather-attribute"><strong>Feels Like:</strong> ${main.feels_like} °F</div>
-        <div class="weather-attribute"><strong>Minimum Temperature:</strong> ${main.temp_min} °F</div>
-        <div class="weather-attribute"><strong>Maximum Temperature:</strong> ${main.temp_max} °F</div>
+        <div class="weather-attribute"><strong>Temperature:</strong> ${Math.round(main.temp)} °F</div>
+        <div class="weather-attribute"><strong>Feels Like:</strong> ${Math.round(main.feels_like)} °F</div>
+        <div class="weather-attribute"><strong>Minimum Temperature:</strong> ${Math.round(main.temp_min)} °F</div>
+        <div class="weather-attribute"><strong>Maximum Temperature:</strong> ${Math.round(main.temp_max)} °F</div>
         <div class="weather-attribute"><strong>Pressure:</strong> ${main.pressure} hPa</div>
         <div class="weather-attribute"><strong>Humidity:</strong> ${main.humidity} %</div>
         <div class="weather-attribute"><strong>Visibility:</strong> ${(visibility / 1609.34).toFixed(2)} miles</div>
@@ -95,10 +95,10 @@ function formatJsonWeatherData(data, timezone) {
     const snowInches = snow ? (snow['1h'] / 25.4).toFixed(2) : 0;
 
     return JSON.stringify({
-        "Temperature": `${main.temp} °F`,
-        "Feels Like": `${main.feels_like} °F`,
-        "Minimum Temperature": `${main.temp_min} °F`,
-        "Maximum Temperature": `${main.temp_max} °F`,
+        "Temperature": `${Math.round(main.temp)} °F`,
+        "Feels Like": `${Math.round(main.feels_like)} °F`,
+        "Minimum Temperature": `${Math.round(main.temp_min)} °F`,
+        "Maximum Temperature": `${Math.round(main.temp_max)} °F`,
         "Pressure": `${main.pressure} hPa`,
         "Humidity": `${main.humidity} %`,
         "Visibility": `${(visibility / 1609.34).toFixed(2)} miles`,
