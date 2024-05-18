@@ -48,4 +48,6 @@ button:hover {
 
 .weather-attribute {
     margin: 0; /* Remove margins to eliminate spaces between lines */
+    padding: 0; /* Ensure padding is also zero */
+    line-height: 1; /* Adjust line height for tighter spacing */
 }
