@@ -39,4 +39,9 @@ button:hover {
 #output {
     margin-top: 20px;
     text-align: left;
+    white-space: pre-wrap; /* Preserve formatting for JSON output */
+}
+
+.weather-attribute {
+    margin: 5px 0;
 }
