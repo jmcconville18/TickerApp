@@ -4,7 +4,9 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
+    margin: 0;
     background-color: #f0f0f0;
+    overflow: auto; /* Ensure the body can scroll */
 }
 
 .container {
@@ -13,6 +15,8 @@ body {
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    max-height: 90vh; /* Ensure the container doesn't exceed viewport height */
+    overflow-y: auto; /* Enable scrolling inside the container */
 }
 
 input {
@@ -43,5 +47,5 @@ button:hover {
 }
 
 .weather-attribute {
-    margin: 5px 0;
+    margin: 0; /* Remove margins to eliminate spaces between lines */
 }
