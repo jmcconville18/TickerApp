@@ -1,26 +1,36 @@
 async function getWeather() {
     const zipCode = document.getElementById('zipCode').value;
     const output = document.getElementById('output');
-    const apiKey = 'YOUR_API_KEY';  // Replace with your actual API key
-    const url = `https://api.open-meteo.com/v1/forecast?zip=${zipCode}&units=imperial`;
+    const geoUrl = `https://nominatim.openstreetmap.org/search?postalcode=${zipCode}&country=US&format=json`;
 
     output.textContent = 'Fetching weather data...';
 
     try {
-        const response = await fetch(url);
-
-        if (!response.ok) {
-            throw new Error(`Error: ${response.status} ${response.statusText}`);
+        const geoResponse = await fetch(geoUrl);
+        if (!geoResponse.ok) {
+            throw new Error(`Error: ${geoResponse.status} ${geoResponse.statusText}`);
         }
 
-        const data = await response.json();
-
-        if (!data || Object.keys(data).length === 0) {
-            throw new Error('No data returned from the API.');
+        const geoData = await geoResponse.json();
+        if (!geoData || geoData.length === 0) {
+            throw new Error('Invalid ZIP code or location not found.');
         }
 
-        output.dataset.json = JSON.stringify(data, null, 2);
-        output.dataset.formatted = formatWeatherData(data);
+        const { lat, lon } = geoData[0];
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch`;
+
+        const weatherResponse = await fetch(weatherUrl);
+        if (!weatherResponse.ok) {
+            throw new Error(`Error: ${weatherResponse.status} ${weatherResponse.statusText}`);
+        }
+
+        const weatherData = await weatherResponse.json();
+        if (!weatherData || !weatherData.current_weather) {
+            throw new Error('No weather data returned from the API.');
+        }
+
+        output.dataset.json = JSON.stringify(weatherData, null, 2);
+        output.dataset.formatted = formatWeatherData(weatherData.current_weather);
         output.textContent = output.dataset.formatted;
     } catch (error) {
         output.textContent = `Error fetching weather data: ${error.message}`;
@@ -30,11 +40,10 @@ async function getWeather() {
 
 function formatWeatherData(data) {
     return `
-        Location: ${data.city}
         Temperature: ${data.temperature} °F
-        Humidity: ${data.humidity} %
-        Wind Speed: ${data.wind_speed} mph
-        Weather: ${data.weather.description}
+        Wind Speed: ${data.windspeed} mph
+        Wind Direction: ${data.winddirection}°
+        Weather: ${data.weathercode}
     `;
 }
 
