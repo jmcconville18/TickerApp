@@ -36,10 +36,8 @@ async function getWeather() {
             throw new Error('No weather data returned from the API.');
         }
 
-        const timezone = weatherData.timezone;
-
         output.dataset.json = JSON.stringify(weatherData, null, 2);
-        output.dataset.formatted = formatWeatherData(weatherData, timezone);
+        output.dataset.formatted = formatWeatherData(weatherData);
         output.innerHTML = output.dataset.formatted; // Use innerHTML for better formatting
     } catch (error) {
         output.textContent = `Error fetching weather data: ${error.message}`;
@@ -47,22 +45,24 @@ async function getWeather() {
     }
 }
 
-function formatWeatherData(data, timezone) {
+function formatWeatherData(data) {
     const DateTime = luxon.DateTime;
+    const { main, clouds, rain, snow, weather, sys, dt, timezone } = data;
 
     const formatTime = (timestamp) => {
         return DateTime.fromSeconds(timestamp).setZone(timezone).toFormat('ff');
     };
 
-    const { main, clouds, rain, snow, weather, sys, dt } = data;
+    const rainInches = rain ? (rain['1h'] / 25.4).toFixed(2) : 0;
+    const snowInches = snow ? (snow['1h'] / 25.4).toFixed(2) : 0;
 
     return `
         <h2>Current Weather</h2>
         <div class="weather-attribute"><strong>Temperature:</strong> ${main.temp} °F</div>
         <div class="weather-attribute"><strong>Humidity:</strong> ${main.humidity} %</div>
         <div class="weather-attribute"><strong>Cloudiness:</strong> ${clouds.all} %</div>
-        <div class="weather-attribute"><strong>Rain (last hour):</strong> ${rain ? rain['1h'] : 0} mm</div>
-        <div class="weather-attribute"><strong>Snow (last hour):</strong> ${snow ? snow['1h'] : 0} mm</div>
+        <div class="weather-attribute"><strong>Rain (last hour):</strong> ${rainInches} inches</div>
+        <div class="weather-attribute"><strong>Snow (last hour):</strong> ${snowInches} inches</div>
         <div class="weather-attribute"><strong>Weather:</strong> ${weather[0].description}</div>
         <div class="weather-attribute"><strong>Sunrise:</strong> ${formatTime(sys.sunrise)}</div>
         <div class="weather-attribute"><strong>Sunset:</strong> ${formatTime(sys.sunset)}</div>
