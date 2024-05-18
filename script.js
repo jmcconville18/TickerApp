@@ -1,5 +1,5 @@
 const apiKey = '688e77c8723821db62ddccb30bfb7630';
-const baseUrl = 'https://api.openweathermap.org/data/2.5/onecall';
+const baseUrl = 'https://api.openweathermap.org/data/2.5/weather';
 
 async function getWeather() {
     const zipCode = document.getElementById('zipCode').value;
@@ -32,7 +32,7 @@ async function getWeather() {
 
         const weatherData = await weatherResponse.json();
 
-        if (!weatherData || !weatherData.current) {
+        if (!weatherData || !weatherData.main) {
             throw new Error('No weather data returned from the API.');
         }
 
@@ -54,32 +54,19 @@ function formatWeatherData(data, timezone) {
         return DateTime.fromSeconds(timestamp).setZone(timezone).toFormat('ff');
     };
 
-    const current = data.current;
-    const daily = data.daily[0];
+    const { main, clouds, rain, snow, weather, sys, dt } = data;
 
     return `
         <h2>Current Weather</h2>
-        <div class="weather-attribute"><strong>Temperature:</strong> ${current.temp} °F</div>
-        <div class="weather-attribute"><strong>Humidity:</strong> ${current.humidity} %</div>
-        <div class="weather-attribute"><strong>Cloudiness:</strong> ${current.clouds} %</div>
-        <div class="weather-attribute"><strong>UV Index:</strong> ${current.uvi}</div>
-        <div class="weather-attribute"><strong>Rain (last hour):</strong> ${current.rain ? current.rain['1h'] : 0} mm</div>
-        <div class="weather-attribute"><strong>Snow (last hour):</strong> ${current.snow ? current.snow['1h'] : 0} mm</div>
-        <div class="weather-attribute"><strong>Weather:</strong> ${current.weather[0].description}</div>
-        <div class="weather-attribute"><strong>Sunrise:</strong> ${formatTime(current.sunrise)}</div>
-        <div class="weather-attribute"><strong>Sunset:</strong> ${formatTime(current.sunset)}</div>
-        <div class="weather-attribute"><strong>Time:</strong> ${formatTime(current.dt)}</div>
-
-        <h2>Daily Weather Forecast</h2>
-        <div class="weather-attribute"><strong>Date:</strong> ${formatTime(daily.dt)}</div>
-        <div class="weather-attribute"><strong>Min Temperature:</strong> ${daily.temp.min} °F</div>
-        <div class="weather-attribute"><strong>Max Temperature:</strong> ${daily.temp.max} °F</div>
-        <div class="weather-attribute"><strong>Humidity:</strong> ${daily.humidity} %</div>
-        <div class="weather-attribute"><strong>Cloudiness:</strong> ${daily.clouds} %</div>
-        <div class="weather-attribute"><strong>Rain:</strong> ${daily.rain ? daily.rain : 0} mm</div>
-        <div class="weather-attribute"><strong>Snow:</strong> ${daily.snow ? daily.snow : 0} mm</div>
-        <div class="weather-attribute"><strong>Weather:</strong> ${daily.weather[0].description}</div>
-        <div class="weather-attribute"><strong>UV Index:</strong> ${daily.uvi}</div>
+        <div class="weather-attribute"><strong>Temperature:</strong> ${main.temp} °F</div>
+        <div class="weather-attribute"><strong>Humidity:</strong> ${main.humidity} %</div>
+        <div class="weather-attribute"><strong>Cloudiness:</strong> ${clouds.all} %</div>
+        <div class="weather-attribute"><strong>Rain (last hour):</strong> ${rain ? rain['1h'] : 0} mm</div>
+        <div class="weather-attribute"><strong>Snow (last hour):</strong> ${snow ? snow['1h'] : 0} mm</div>
+        <div class="weather-attribute"><strong>Weather:</strong> ${weather[0].description}</div>
+        <div class="weather-attribute"><strong>Sunrise:</strong> ${formatTime(sys.sunrise)}</div>
+        <div class="weather-attribute"><strong>Sunset:</strong> ${formatTime(sys.sunset)}</div>
+        <div class="weather-attribute"><strong>Time:</strong> ${formatTime(dt)}</div>
     `;
 }
 
