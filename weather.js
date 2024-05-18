@@ -1,4 +1,3 @@
-const apiKey = '688e77c8723821db62ddccb30bfb7630';
 const weatherUrl = 'https://api.openweathermap.org/data/2.5/weather';
 
 async function getWeather() {
@@ -113,13 +112,4 @@ function formatJsonWeatherData(data, timezone) {
         "Sunset": formatTime(sys.sunset),
         "Time of Data Calculation": formatTime(dt)
     }, null, 2);
-}
-
-function toggleView() {
-    const output = document.getElementById('output');
-    if (output.innerHTML.trim() === output.dataset.formatted.trim()) {
-        output.textContent = output.dataset.json;
-    } else {
-        output.innerHTML = output.dataset.formatted;
-    }
 }
