@@ -35,7 +35,7 @@ async function getWeather() {
 
         output.dataset.json = JSON.stringify(weatherData, null, 2);
         output.dataset.formatted = formatWeatherData(weatherData.current_weather);
-        output.textContent = output.dataset.formatted;
+        output.innerHTML = output.dataset.formatted; // Use innerHTML for better formatting
     } catch (error) {
         output.textContent = `Error fetching weather data: ${error.message}`;
         console.error('Fetch error:', error);
@@ -44,10 +44,11 @@ async function getWeather() {
 
 function formatWeatherData(data) {
     return `
-        Temperature: ${data.temperature} °F
-        Wind Speed: ${data.windspeed} mph
-        Wind Direction: ${data.winddirection}°
-        Weather: ${data.weathercode}
+        <div class="weather-attribute"><strong>Temperature:</strong> ${data.temperature} °F</div>
+        <div class="weather-attribute"><strong>Wind Speed:</strong> ${data.windspeed} mph</div>
+        <div class="weather-attribute"><strong>Wind Direction:</strong> ${data.winddirection}°</div>
+        <div class="weather-attribute"><strong>Weather Code:</strong> ${data.weathercode}</div>
+        <div class="weather-attribute"><strong>Time:</strong> ${data.time}</div>
     `;
 }
 
@@ -56,6 +57,6 @@ function toggleView() {
     if (output.textContent === output.dataset.formatted) {
         output.textContent = output.dataset.json;
     } else {
-        output.textContent = output.dataset.formatted;
+        output.innerHTML = output.dataset.formatted;
     }
 }
