@@ -33,8 +33,11 @@ async function getWeather() {
             throw new Error('No weather data returned from the API.');
         }
 
+        // Get timezone info
+        const timezone = weatherData.timezone;
+
         output.dataset.json = JSON.stringify(weatherData, null, 2);
-        output.dataset.formatted = formatWeatherData(weatherData.current_weather);
+        output.dataset.formatted = formatWeatherData(weatherData.current_weather, timezone);
         output.innerHTML = output.dataset.formatted; // Use innerHTML for better formatting
     } catch (error) {
         output.textContent = `Error fetching weather data: ${error.message}`;
@@ -42,21 +45,27 @@ async function getWeather() {
     }
 }
 
-function formatWeatherData(data) {
+function formatWeatherData(data, timezone) {
+    const DateTime = luxon.DateTime;
+    const localTime = DateTime.fromISO(data.time).setZone(timezone).toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
+
     return `
         <div class="weather-attribute"><strong>Temperature:</strong> ${data.temperature} °F</div>
         <div class="weather-attribute"><strong>Wind Speed:</strong> ${data.windspeed} mph</div>
         <div class="weather-attribute"><strong>Wind Direction:</strong> ${data.winddirection}°</div>
         <div class="weather-attribute"><strong>Weather Code:</strong> ${data.weathercode}</div>
-        <div class="weather-attribute"><strong>Time:</strong> ${data.time}</div>
+        <div class="weather-attribute"><strong>Humidity:</strong> ${data.humidity} %</div>
+        <div class="weather-attribute"><strong>Pressure:</strong> ${data.pressure} hPa</div>
+        <div class="weather-attribute"><strong>Precipitation:</strong> ${data.precipitation} inches</div>
+        <div class="weather-attribute"><strong>Time:</strong> ${localTime}</div>
     `;
 }
 
 function toggleView() {
     const output = document.getElementById('output');
-    if (output.textContent === output.dataset.formatted) {
-        output.textContent = output.dataset.json;
-    } else {
+    if (output.innerHTML === output.dataset.json) {
         output.innerHTML = output.dataset.formatted;
+    } else {
+        output.textContent = output.dataset.json;
     }
 }
