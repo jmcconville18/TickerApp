@@ -1,7 +1,3 @@
-#final comment
-#seriously
-#last time again
- 
 document.addEventListener('DOMContentLoaded', () => {
   const zipcodeForm = document.getElementById('zipcode-form');
   const zipcodeInput = document.getElementById('zipcode-input');
@@ -71,7 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const sunrise = new Date(data.daily.sunrise[0]).toLocaleTimeString('en-US', { timeZone: data.timezone, hour: '2-digit', minute: '2-digit', hour12: true });
       const sunset = new Date(data.daily.sunset[0]).toLocaleTimeString('en-US', { timeZone: data.timezone, hour: '2-digit', minute: '2-digit', hour12: true });
       const uvIndex = data.daily.uv_index_max[0];
-	  #heres a comment
 
       weatherOutput.innerHTML = `
         <p><strong>City:</strong> ${data.city}, ${data.state}</p>
@@ -81,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <p><strong>Wind Speed:</strong> ${windSpeed} mph</p>
         <p><strong>Humidity:</strong> ${humidity}%</p>
         <p><strong>Cloud Cover:</strong> ${cloudCover}%</p>
-        <p><strong>Pressure:</strong> ${pressure} inHg</p> 
+        <p><strong>Pressure:</strong> ${pressure} inHg</p>
         <p><strong>Sunrise:</strong> ${sunrise}</p>
         <p><strong>Sunset:</strong> ${sunset}</p>
         <p><strong>UV Index:</strong> ${uvIndex}</p>
