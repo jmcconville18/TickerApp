@@ -44,7 +44,7 @@ async function fetchStockData(symbol) {
     const latestDate = dates[0];
     const previousDate = dates.find(date => {
         const diff = new Date(latestDate).getTime() - new Date(date).getTime();
-        return diff >= 30 * 24 * 60 * 60 * 1000;
+        return diff >= 24 * 60 * 60 * 1000;
     });
 
     const latestData = timeSeries[latestDate];
@@ -55,13 +55,30 @@ async function fetchStockData(symbol) {
     const dollarChange = (currentPrice - previousClose).toFixed(2);
     const percentChange = ((dollarChange / previousClose) * 100).toFixed(2);
 
+    const previousCloseTimeframe = determineTimeframe(latestDate, previousDate);
+
     return {
         symbol,
         currentPrice,
         previousClose,
         dollarChange,
-        percentChange
+        percentChange,
+        previousCloseTimeframe
     };
+}
+
+function determineTimeframe(latestDate, previousDate) {
+    const latest = new Date(latestDate);
+    const previous = new Date(previousDate);
+    const diffInDays = (latest - previous) / (1000 * 60 * 60 * 24);
+
+    if (diffInDays <= 1) {
+        return 'yesterday';
+    } else if (diffInDays <= 7) {
+        return 'last week';
+    } else {
+        return 'last month';
+    }
 }
 
 function formatStockData(data) {
@@ -74,6 +91,7 @@ function formatStockData(data) {
             <strong>${data.symbol}</strong><br>
             Current Price: $${data.currentPrice}<br>
             Previous Close: $${data.previousClose}<br>
+            Previous Close Timeframe: ${data.previousCloseTimeframe}<br>
             $ Change: $${data.dollarChange}<br>
             % Change: ${data.percentChange}%
         </div>
