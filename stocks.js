@@ -2,42 +2,18 @@ const alphaVantageApiKey = 'your_alpha_vantage_api_key';
 
 document.addEventListener('DOMContentLoaded', loadStocks);
 
-function addStock() {
-    const stockInput = document.createElement('div');
-    stockInput.classList.add('stock-input');
-    stockInput.innerHTML = `
-        <input type="text" placeholder="Enter Stock Symbol" class="stock-symbol" oninput="saveStocks()">
-        <button onclick="removeStock(this)">Remove</button>
-    `;
-    document.getElementById('stocks-input').appendChild(stockInput);
-    saveStocks();
-}
-
-function removeStock(button) {
-    button.parentElement.remove();
-    saveStocks();
-}
-
 function saveStocks() {
-    const stockSymbols = Array.from(document.getElementsByClassName('stock-symbol')).map(input => input.value);
-    localStorage.setItem('stocks', JSON.stringify(stockSymbols));
+    const stockSymbols = document.getElementById('stockSymbols').value;
+    localStorage.setItem('stocks', stockSymbols);
 }
 
 function loadStocks() {
-    const storedStocks = JSON.parse(localStorage.getItem('stocks')) || [];
-    storedStocks.forEach(symbol => {
-        const stockInput = document.createElement('div');
-        stockInput.classList.add('stock-input');
-        stockInput.innerHTML = `
-            <input type="text" placeholder="Enter Stock Symbol" class="stock-symbol" value="${symbol}" oninput="saveStocks()">
-            <button onclick="removeStock(this)">Remove</button>
-        `;
-        document.getElementById('stocks-input').appendChild(stockInput);
-    });
+    const storedStocks = localStorage.getItem('stocks') || 'MSFT,AAPL,NVDA,CRM';
+    document.getElementById('stockSymbols').value = storedStocks;
 }
 
 async function getStockData() {
-    const stockSymbols = Array.from(document.getElementsByClassName('stock-symbol')).map(input => input.value);
+    const stockSymbols = document.getElementById('stockSymbols').value.split(',').map(symbol => symbol.trim());
     const stockOutput = document.getElementById('stocks-output');
     stockOutput.innerHTML = 'Fetching stock data...';
 
@@ -45,8 +21,8 @@ async function getStockData() {
     const results = await Promise.all(promises);
 
     stockOutput.dataset.json = JSON.stringify(results, null, 2);
-    stockOutput.dataset.formatted = await Promise.all(results.map(async result => await formatStockData(result)));
-    stockOutput.innerHTML = stockOutput.dataset.formatted.join('<br>');
+    stockOutput.dataset.formatted = results.map(result => formatStockData(result)).join('<br>');
+    stockOutput.innerHTML = stockOutput.dataset.formatted;
 }
 
 async function fetchStockData(symbol) {
@@ -59,62 +35,31 @@ async function fetchStockData(symbol) {
         return { symbol, error: 'Data not available' };
     }
 
-    const dates = Object.keys(timeSeries).slice(0, 30).reverse();
-    const values = dates.map(date => parseFloat(timeSeries[date]['4. close']));
-    const latestData = values[values.length - 1];
-    const oneMonthAgoData = values[0];
+    const dates = Object.keys(timeSeries);
+    const latestDate = dates[0];
+    const previousDate = dates.find(date => {
+        const diff = new Date(latestDate).getTime() - new Date(date).getTime();
+        return diff >= 30 * 24 * 60 * 60 * 1000;
+    });
 
-    const currentPrice = latestData;
-    const previousClose = oneMonthAgoData;
+    const latestData = timeSeries[latestDate];
+    const previousData = timeSeries[previousDate];
+
+    const currentPrice = parseFloat(latestData['4. close']);
+    const previousClose = parseFloat(previousData['4. close']);
     const dollarChange = (currentPrice - previousClose).toFixed(2);
     const percentChange = ((dollarChange / previousClose) * 100).toFixed(2);
-
-    const chartUrl = await generateChartUrl(values, latestData, oneMonthAgoData);
 
     return {
         symbol,
         currentPrice,
         previousClose,
         dollarChange,
-        percentChange,
-        chartUrl
+        percentChange
     };
 }
 
-async function generateChartUrl(values, latestData, oneMonthAgoData) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 320; // Example width
-    canvas.height = 160; // Example height
-    const ctx = canvas.getContext('2d');
-
-    const isPositive = latestData >= oneMonthAgoData;
-    const color = isPositive ? '#00FF00' : '#FF0000';
-
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    values.forEach((value, index) => {
-        const x = (index / (values.length - 1)) * canvas.width;
-        const y = canvas.height - (value / Math.max(...values)) * canvas.height;
-        if (index === 0) {
-            ctx.moveTo(x, y);
-        } else {
-            ctx.lineTo(x, y);
-        }
-    });
-    ctx.stroke();
-
-    return new Promise(resolve => {
-        canvas.toDataURL('image/bmp', (dataUrl) => {
-            resolve(dataUrl);
-        });
-    });
-}
-
-async function formatStockData(data) {
+function formatStockData(data) {
     if (data.error) {
         return `<div>${data.symbol}: ${data.error}</div>`;
     }
@@ -125,8 +70,7 @@ async function formatStockData(data) {
             Current Price: $${data.currentPrice}<br>
             Previous Close: $${data.previousClose}<br>
             $ Change: $${data.dollarChange}<br>
-            % Change: ${data.percentChange}%<br>
-            <img src="${data.chartUrl}" alt="Stock Chart for ${data.symbol}">
+            % Change: ${data.percentChange}%
         </div>
     `;
 }
