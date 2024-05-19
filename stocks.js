@@ -8,12 +8,17 @@ function saveStocks() {
 }
 
 function loadStocks() {
-    const storedStocks = localStorage.getItem('stocks') || 'MSFT,AAPL,NVDA,CRM';
+    let storedStocks = localStorage.getItem('stocks');
+    if (!storedStocks) {
+        storedStocks = 'AAPL,MSFT,NVDA,CRM';
+        localStorage.setItem('stocks', storedStocks);
+    }
     document.getElementById('stockSymbols').value = storedStocks;
 }
 
 async function getStockData() {
-    const stockSymbols = document.getElementById('stockSymbols').value.split(',').map(symbol => symbol.trim());
+    saveStocks(); // Ensure the latest symbols are saved before fetching data
+    const stockSymbols = document.getElementById('stockSymbols').value.split(',').map(symbol => symbol.trim().toUpperCase());
     const stockOutput = document.getElementById('stocks-output');
     stockOutput.innerHTML = 'Fetching stock data...';
 
