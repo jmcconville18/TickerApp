@@ -40,18 +40,18 @@ button:hover {
     background-color: #0056b3;
 }
 
-#output, #stocks-output {
+#output, #stocks-output, #sports-output {
     margin-top: 20px;
     text-align: left;
     white-space: pre-wrap;
 }
 
-.weather-attribute, .stock-attribute {
+.weather-attribute, .stock-attribute, .sports-attribute {
     margin: 0;
     padding: 0;
     line-height: 1.5;
 }
 
-.stock-input {
+.stock-input, .sports-input {
     margin-bottom: 10px;
 }

@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather and Stocks App</title>
+    <title>Weather, Stocks, and Sports Scores App</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/2.3.0/luxon.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>Weather and Stocks App</h1>
+        <h1>Weather, Stocks, and Sports Scores App</h1>
         
         <!-- Weather Section -->
         <div id="weather-section">
@@ -20,7 +19,7 @@
             <button onclick="toggleView()">Toggle JSON/Formatted View</button>
             <div id="output"></div>
         </div>
-        
+
         <!-- Stocks Section -->
         <div id="stocks-section">
             <h2>Stocks and Funds</h2>
@@ -29,11 +28,42 @@
             <button onclick="toggleStockView()">Toggle JSON/Formatted View</button>
             <div id="stocks-output"></div>
         </div>
+
+        <!-- Sports Scores Section -->
+        <div id="sports-section">
+            <h2>Sports Scores</h2>
+            <button onclick="toggleSports()">Show/Hide Sports</button>
+            <div id="sports-options" style="display:none;">
+                <div>
+                    <input type="checkbox" id="nfl" name="leagues" value="NFL">
+                    <label for="nfl">NFL</label>
+                    <input type="text" id="nflTeams" placeholder="Enter Favorite Teams (comma separated)">
+                </div>
+                <div>
+                    <input type="checkbox" id="nba" name="leagues" value="NBA">
+                    <label for="nba">NBA</label>
+                    <input type="text" id="nbaTeams" placeholder="Enter Favorite Teams (comma separated)">
+                </div>
+                <div>
+                    <input type="checkbox" id="cfb" name="leagues" value="College Football">
+                    <label for="cfb">College Football</label>
+                    <input type="text" id="cfbTeams" placeholder="Enter Favorite Teams (comma separated)">
+                </div>
+                <div>
+                    <input type="checkbox" id="mcbb" name="leagues" value="Men's College Basketball">
+                    <label for="mcbb">Men's College Basketball</label>
+                    <input type="text" id="mcbbTeams" placeholder="Enter Favorite Teams (comma separated)">
+                </div>
+            </div>
+            <button onclick="getSportsScores()">Get Sports Scores</button>
+            <div id="sports-output"></div>
+        </div>
     </div>
     <script src="config.js"></script>
     <script src="weather.js"></script>
     <script src="forecast.js"></script>
     <script src="stocks.js"></script>
+    <script src="sports.js"></script>
     <script src="toggle.js"></script>
 </body>
 </html>
