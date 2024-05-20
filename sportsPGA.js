@@ -1,8 +1,16 @@
-let apiCallCounterPGA = localStorage.getItem('apiCallCounterPGA') ? parseInt(localStorage.getItem('apiCallCounterPGA')) : 0;
+// Initialize apiCallCounterPGA if not already set
+if (!window.apiCallCounterPGA) {
+    window.apiCallCounterPGA = localStorage.getItem('apiCallCounterPGA') ? parseInt(localStorage.getItem('apiCallCounterPGA')) : 0;
+}
+
+// Define tour data for PGA Tour
+const tourData = {
+    tour_id: 2, // US PGA Tour ID
+    season_id: 2024
+};
 
 async function getPGAScores() {
-    const toursUrl = 'https://golf-leaderboard-data.p.rapidapi.com/tours';
-    const fixturesUrl = 'https://golf-leaderboard-data.p.rapidapi.com/fixtures/';
+    const fixturesUrl = `https://golf-leaderboard-data.p.rapidapi.com/fixtures/${tourData.tour_id}/${tourData.season_id}`;
     const leaderboardUrl = 'https://golf-leaderboard-data.p.rapidapi.com/leaderboard/';
     const league = {
         name: 'PGA Tour'
@@ -11,48 +19,45 @@ async function getPGAScores() {
     let results = '';
     const simplifiedJsonResults = [];
 
-    if (apiCallCounterPGA >= 200) {
-        results = '<p>API call limit reached. Please try again later.</p>';
-        return { formatted: results, json: {} };
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 (Sunday) to 6 (Saturday)
+
+    if (window.apiCallCounterPGA >= 50 && dayOfWeek >= 4 && dayOfWeek <= 7) {
+        results = '<p>Daily API call limit reached. Showing cached data.</p>';
+        const cachedLeaderboardData = JSON.parse(localStorage.getItem('cachedLeaderboardData'));
+        if (cachedLeaderboardData) {
+            return { formatted: cachedLeaderboardData.formatted, json: cachedLeaderboardData.json };
+        } else {
+            results += '<p>No cached data available.</p>';
+            return { formatted: results, json: {} };
+        }
     }
 
     try {
-        // Fetch tours
-        const toursResponse = await fetch(toursUrl, {
-            method: 'GET',
-            headers: {
-                'X-RapidAPI-Key': 'e6bc2a9333msh2c319566291e932p1ded96jsn259d04576919',
-                'X-RapidAPI-Host': 'golf-leaderboard-data.p.rapidapi.com'
-            }
-        });
-        const toursData = await toursResponse.json();
-        console.log('Tours Data:', toursData);
+        let fixturesData;
+        const lastFixturesFetch = new Date(localStorage.getItem('lastFixturesFetch'));
+        const lastLeaderboardFetch = new Date(localStorage.getItem('lastLeaderboardFetch'));
+        const cachedFixturesData = JSON.parse(localStorage.getItem('cachedFixturesData'));
 
-        if (!toursData || !toursData.results) {
-            results = '<p>Error fetching tours data.</p>';
-            return { formatted: results, json: {} };
+        if (!cachedFixturesData || dayOfWeek === 1 || (today - lastFixturesFetch) / (1000 * 60 * 60 * 24) >= 7) {
+            const fixturesResponse = await fetch(fixturesUrl, {
+                method: 'GET',
+                headers: {
+                    'X-RapidAPI-Key': 'e6bc2a9333msh2c319566291e932p1ded96jsn259d04576919',
+                    'X-RapidAPI-Host': 'golf-leaderboard-data.p.rapidapi.com'
+                }
+            });
+            fixturesData = await fixturesResponse.json();
+            localStorage.setItem('cachedFixturesData', JSON.stringify(fixturesData));
+            localStorage.setItem('lastFixturesFetch', today.toISOString());
+            console.log('Fetched new fixtures data');
+        } else {
+            fixturesData = cachedFixturesData;
+            console.log('Used cached fixtures data');
         }
 
-        const pgaTour = toursData.results.find(tour => tour.tour_name === 'US PGA Tour' && tour.season_id === 2024);
-
-        if (!pgaTour) {
-            results = '<p>PGA Tour data not found.</p>';
-            return { formatted: results, json: {} };
-        }
-
-        // Fetch fixtures for PGA Tour
-        const fixturesResponse = await fetch(`${fixturesUrl}${pgaTour.tour_id}/${pgaTour.season_id}`, {
-            method: 'GET',
-            headers: {
-                'X-RapidAPI-Key': 'e6bc2a9333msh2c319566291e932p1ded96jsn259d04576919',
-                'X-RapidAPI-Host': 'golf-leaderboard-data.p.rapidapi.com'
-            }
-        });
-        const fixturesData = await fixturesResponse.json();
-        console.log('Fixtures Data:', fixturesData);
-
-        apiCallCounterPGA++;
-        localStorage.setItem('apiCallCounterPGA', apiCallCounterPGA);
+        window.apiCallCounterPGA++;
+        localStorage.setItem('apiCallCounterPGA', window.apiCallCounterPGA);
 
         if (!fixturesData || !fixturesData.results) {
             results = '<p>Error fetching fixtures data.</p>';
@@ -85,7 +90,8 @@ async function getPGAScores() {
                 current: currentTournament,
                 next: nextTournament
             },
-            apiCallCounter: apiCallCounterPGA
+            games: [],
+            apiCallCounter: window.apiCallCounterPGA
         };
 
         results += `<h3>${league.name}</h3>`;
@@ -94,7 +100,7 @@ async function getPGAScores() {
             return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`;
         };
         const formatPurse = (purse) => {
-            return `$${parseFloat(purse).toLocaleString()}`;
+            return `$${parseFloat(purse.replace(/,/g, '')).toLocaleString()}`;
         };
 
         if (previousTournament) {
@@ -113,17 +119,26 @@ async function getPGAScores() {
         // Fetch leaderboard for the appropriate tournament
         let leaderboardTournament = currentTournament ? currentTournament : previousTournament;
         if (leaderboardTournament) {
-            const leaderboardResponse = await fetch(`${leaderboardUrl}${leaderboardTournament.id}`, {
-                method: 'GET',
-                headers: {
-                    'X-RapidAPI-Key': 'e6bc2a9333msh2c319566291e932p1ded96jsn259d04576919',
-                    'X-RapidAPI-Host': 'golf-leaderboard-data.p.rapidapi.com'
-                }
-            });
-            const leaderboardData = await leaderboardResponse.json();
-            console.log('Leaderboard Data:', leaderboardData);
+            let leaderboardData;
 
-            if (leaderboardData.results && leaderboardData.results.leaderboard) {
+            if (!localStorage.getItem('cachedLeaderboardData') || dayOfWeek === 1 || (today - lastLeaderboardFetch) / (1000 * 60 * 60 * 24) >= 3 || (dayOfWeek >= 4 && dayOfWeek <= 7 && window.apiCallCounterPGA <= 50)) {
+                const leaderboardResponse = await fetch(`${leaderboardUrl}${leaderboardTournament.id}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-RapidAPI-Key': 'e6bc2a9333msh2c319566291e932p1ded96jsn259d04576919',
+                        'X-RapidAPI-Host': 'golf-leaderboard-data.p.rapidapi.com'
+                    }
+                });
+                leaderboardData = await leaderboardResponse.json();
+                localStorage.setItem('cachedLeaderboardData', JSON.stringify(leaderboardData));
+                localStorage.setItem('lastLeaderboardFetch', today.toISOString());
+                console.log('Fetched new leaderboard data');
+            } else {
+                leaderboardData = JSON.parse(localStorage.getItem('cachedLeaderboardData'));
+                console.log('Used cached leaderboard data');
+            }
+
+            if (leaderboardData && leaderboardData.results && leaderboardData.results.leaderboard) {
                 const isTournamentCurrent = Boolean(currentTournament);
                 leaderboardData.results.leaderboard.slice(0, isTournamentCurrent ? 10 : 5).forEach((player, index) => {
                     const playerName = `${player.first_name} ${player.last_name}`;
