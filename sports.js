@@ -1,4 +1,40 @@
+document.addEventListener('DOMContentLoaded', loadSportsPreferences);
+
+function saveSportsPreferences() {
+    const leagues = ['nfl', 'nba', 'cfb', 'mcbb'];
+    const preferences = {};
+
+    leagues.forEach(league => {
+        preferences[league] = {
+            selected: document.getElementById(league).checked,
+            teams: document.getElementById(league + 'Teams').value
+        };
+    });
+
+    localStorage.setItem('sportsPreferences', JSON.stringify(preferences));
+}
+
+function loadSportsPreferences() {
+    const preferences = JSON.parse(localStorage.getItem('sportsPreferences')) || {
+        nfl: { selected: false, teams: '' },
+        nba: { selected: false, teams: '' },
+        cfb: { selected: false, teams: '' },
+        mcbb: { selected: false, teams: '' }
+    };
+
+    Object.keys(preferences).forEach(league => {
+        document.getElementById(league).checked = preferences[league].selected;
+        document.getElementById(league + 'Teams').value = preferences[league].teams;
+    });
+}
+
+function convertToEST(dateString) {
+    return luxon.DateTime.fromISO(dateString, { zone: 'utc' }).setZone('America/New_York');
+}
+
 async function getSportsScores() {
+    saveSportsPreferences();
+
     const sportsOutput = document.getElementById('sports-output');
     sportsOutput.innerHTML = 'Fetching sports scores...';
 
@@ -28,6 +64,10 @@ async function getSportsScores() {
     let results = '';
     const simplifiedJsonResults = [];
 
+    const now = luxon.DateTime.local().setZone('America/New_York');
+    const today = now.toISODate();
+    const yesterday = now.minus({ days: 1 }).toISODate();
+
     for (const leagueKey in leagues) {
         const league = leagues[leagueKey];
         if (document.getElementById(leagueKey).checked) {
@@ -37,82 +77,77 @@ async function getSportsScores() {
 
             const leagueJson = {
                 league: league.name,
+                apiUrl: league.url,
                 games: []
             };
 
             results += `<h3>${league.name}</h3>`;
-            
-            if (league.teams.length === 0 || (league.teams.length === 1 && league.teams[0] === '')) {
-                const today = new Date().toISOString().split('T')[0];
-                const yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
-                const yesterdayStr = yesterday.toISOString().split('T')[0];
 
-                games.forEach(game => {
-                    const gameDate = game.date.split('T')[0];
-                    if (gameDate === today) {
-                        const homeTeam = game.competitions[0].competitors[0].team.abbreviation;
-                        const awayTeam = game.competitions[0].competitors[1].team.abbreviation;
-                        const gameTime = new Date(game.date).toLocaleString('en-US', { timeZone: 'America/New_York' });
-                        const status = game.status.type.name;
+            games.forEach(game => {
+                const gameDate = convertToEST(game.date).toISODate();
+                const gameTime = convertToEST(game.date).toLocaleString(luxon.DateTime.DATETIME_SHORT);
 
-                        if (status === 'STATUS_IN_PROGRESS') {
-                            const homeScore = game.competitions[0].competitors[0].score;
-                            const awayScore = game.competitions[0].competitors[1].score;
-                            const period = game.status.period;
-                            const clock = game.status.displayClock;
-                            results += `<p>${homeTeam} vs ${awayTeam}: ${homeScore} - ${awayScore} (Period: ${period}, Time: ${clock})</p>`;
-                            leagueJson.games.push({
-                                homeTeam,
-                                awayTeam,
-                                homeScore,
-                                awayScore,
-                                period,
-                                clock,
-                                status: 'in progress'
-                            });
-                        } else {
-                            results += `<p>${homeTeam} vs ${awayTeam} at ${gameTime}</p>`;
-                            leagueJson.games.push({
-                                homeTeam,
-                                awayTeam,
-                                gameTime,
-                                status: 'scheduled'
-                            });
-                        }
-                    } else if (gameDate === yesterdayStr) {
-                        const homeTeam = game.competitions[0].competitors[0].team.abbreviation;
-                        const awayTeam = game.competitions[0].competitors[1].team.abbreviation;
+                if (gameDate === today) {
+                    const homeTeam = game.competitions[0].competitors[0].team.abbreviation;
+                    const awayTeam = game.competitions[0].competitors[1].team.abbreviation;
+                    const status = game.status.type.name;
+
+                    if (status === 'STATUS_IN_PROGRESS') {
                         const homeScore = game.competitions[0].competitors[0].score;
                         const awayScore = game.competitions[0].competitors[1].score;
-                        results += `<p>${homeTeam} ${homeScore} - ${awayTeam} ${awayScore} (Yesterday)</p>`;
+                        const period = game.status.period;
+                        const clock = game.status.displayClock;
+                        results += `<p>${homeTeam} vs ${awayTeam}: ${homeScore} - ${awayScore} (Period: ${period}, Time: ${clock})</p>`;
                         leagueJson.games.push({
                             homeTeam,
                             awayTeam,
                             homeScore,
                             awayScore,
-                            status: 'completed'
+                            period,
+                            clock,
+                            status: 'in progress'
                         });
-                    }
-                });
-            } else {
-                league.teams.forEach(team => {
-                    const game = games.find(game => game.competitions[0].competitors.some(competitor => competitor.team.abbreviation.toUpperCase() === team));
-                    if (game) {
-                        const homeTeam = game.competitions[0].competitors[0].team.abbreviation;
-                        const awayTeam = game.competitions[0].competitors[1].team.abbreviation;
-                        const gameTime = new Date(game.date).toLocaleString('en-US', { timeZone: 'America/New_York' });
-                        results += `<p>Next game for ${team}: ${homeTeam} vs ${awayTeam} at ${gameTime}</p>`;
+                    } else {
+                        results += `<p>${homeTeam} vs ${awayTeam} at ${gameTime}</p>`;
                         leagueJson.games.push({
-                            team,
                             homeTeam,
                             awayTeam,
                             gameTime,
-                            status: 'next'
+                            status: 'scheduled'
                         });
                     }
-                });
-            }
+                } else if (gameDate === yesterday) {
+                    const homeTeam = game.competitions[0].competitors[0].team.abbreviation;
+                    const awayTeam = game.competitions[0].competitors[1].team.abbreviation;
+                    const homeScore = game.competitions[0].competitors[0].score;
+                    const awayScore = game.competitions[0].competitors[1].score;
+                    results += `<p>${homeTeam} ${homeScore} - ${awayTeam} ${awayScore} (Yesterday)</p>`;
+                    leagueJson.games.push({
+                        homeTeam,
+                        awayTeam,
+                        homeScore,
+                        awayScore,
+                        status: 'completed'
+                    });
+                }
+            });
+
+            league.teams.forEach(team => {
+                const game = games.find(game => game.competitions[0].competitors.some(competitor => competitor.team.abbreviation.toUpperCase() === team));
+                if (game) {
+                    const homeTeam = game.competitions[0].competitors[0].team.abbreviation;
+                    const awayTeam = game.competitions[0].competitors[1].team.abbreviation;
+                    const gameTime = convertToEST(game.date).toLocaleString(luxon.DateTime.DATETIME_SHORT);
+                    results += `<p>Next game for ${team}: ${homeTeam} vs ${awayTeam} at ${gameTime}</p>`;
+                    leagueJson.games.push({
+                        team,
+                        homeTeam,
+                        awayTeam,
+                        gameTime,
+                        status: 'next'
+                    });
+                }
+            });
 
             simplifiedJsonResults.push(leagueJson);
         }
