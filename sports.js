@@ -26,6 +26,7 @@ async function getSportsScores() {
     };
 
     let results = '';
+    const simplifiedJsonResults = [];
 
     for (const leagueKey in leagues) {
         const league = leagues[leagueKey];
@@ -33,6 +34,11 @@ async function getSportsScores() {
             const response = await fetch(league.url);
             const data = await response.json();
             const games = data.events;
+
+            const leagueJson = {
+                league: league.name,
+                games: []
+            };
 
             results += `<h3>${league.name}</h3>`;
             
@@ -56,8 +62,23 @@ async function getSportsScores() {
                             const period = game.status.period;
                             const clock = game.status.displayClock;
                             results += `<p>${homeTeam} vs ${awayTeam}: ${homeScore} - ${awayScore} (Period: ${period}, Time: ${clock})</p>`;
+                            leagueJson.games.push({
+                                homeTeam,
+                                awayTeam,
+                                homeScore,
+                                awayScore,
+                                period,
+                                clock,
+                                status: 'in progress'
+                            });
                         } else {
                             results += `<p>${homeTeam} vs ${awayTeam} at ${gameTime}</p>`;
+                            leagueJson.games.push({
+                                homeTeam,
+                                awayTeam,
+                                gameTime,
+                                status: 'scheduled'
+                            });
                         }
                     } else if (gameDate === yesterdayStr) {
                         const homeTeam = game.competitions[0].competitors[0].team.abbreviation;
@@ -65,6 +86,13 @@ async function getSportsScores() {
                         const homeScore = game.competitions[0].competitors[0].score;
                         const awayScore = game.competitions[0].competitors[1].score;
                         results += `<p>${homeTeam} ${homeScore} - ${awayTeam} ${awayScore} (Yesterday)</p>`;
+                        leagueJson.games.push({
+                            homeTeam,
+                            awayTeam,
+                            homeScore,
+                            awayScore,
+                            status: 'completed'
+                        });
                     }
                 });
             } else {
@@ -75,16 +103,36 @@ async function getSportsScores() {
                         const awayTeam = game.competitions[0].competitors[1].team.abbreviation;
                         const gameTime = new Date(game.date).toLocaleString('en-US', { timeZone: 'America/New_York' });
                         results += `<p>Next game for ${team}: ${homeTeam} vs ${awayTeam} at ${gameTime}</p>`;
+                        leagueJson.games.push({
+                            team,
+                            homeTeam,
+                            awayTeam,
+                            gameTime,
+                            status: 'next'
+                        });
                     }
                 });
             }
+
+            simplifiedJsonResults.push(leagueJson);
         }
     }
 
-    sportsOutput.innerHTML = results;
+    sportsOutput.dataset.json = JSON.stringify(simplifiedJsonResults, null, 2);
+    sportsOutput.dataset.formatted = results;
+    sportsOutput.innerHTML = sportsOutput.dataset.formatted;
 }
 
 function toggleSports() {
     const sportsOptions = document.getElementById('sports-options');
     sportsOptions.style.display = sportsOptions.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleSportsView() {
+    const sportsOutput = document.getElementById('sports-output');
+    if (sportsOutput.innerHTML.trim() === sportsOutput.dataset.formatted.trim()) {
+        sportsOutput.textContent = sportsOutput.dataset.json;
+    } else {
+        sportsOutput.innerHTML = sportsOutput.dataset.formatted;
+    }
 }
