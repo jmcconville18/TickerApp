@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather, Stocks, and Sports Scores App</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/2.3.0/luxon.min.js"></script>
+    <script src="config.js" defer></script>
+    <script src="weather.js" defer></script>
+    <script src="forecast.js" defer></script>
+    <script src="stocks.js" defer></script>
+    <script src="sports.js" defer></script>
+    <script src="sportsNFL.js" defer></script>
+    <script src="sportsNBA.js" defer></script>
+    <script src="sportsCFB.js" defer></script>
+    <script src="sportsMCBB.js" defer></script>
+    <script src="sportsMMA.js" defer></script>
+    <script src="sportsBoxing.js" defer></script>
+    <script src="sportsPGA.js" defer></script>
+    <script src="toggle.js" defer></script>
 </head>
 <body>
     <div class="container">
@@ -54,17 +68,23 @@
                     <label for="mcbb">Men's College Basketball</label>
                     <input type="text" id="mcbbTeams" placeholder="Enter Favorite Teams (comma separated)">
                 </div>
+                <div>
+                    <input type="checkbox" id="mma" name="leagues" value="MMA">
+                    <label for="mma">MMA</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="boxing" name="leagues" value="Boxing">
+                    <label for="boxing">Boxing</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="pga" name="leagues" value="PGA Tour">
+                    <label for="pga">PGA Tour</label>
+                </div>
             </div>
             <button onclick="getSportsScores()">Get Sports Scores</button>
             <button onclick="toggleSportsView()">Toggle JSON/Formatted View</button>
             <div id="sports-output"></div>
         </div>
     </div>
-    <script src="config.js"></script>
-    <script src="weather.js"></script>
-    <script src="forecast.js"></script>
-    <script src="stocks.js"></script>
-    <script src="sports.js"></script>
-    <script src="toggle.js"></script>
 </body>
 </html>
