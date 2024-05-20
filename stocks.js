@@ -1,61 +1,48 @@
-const alphaVantageApiKey = 'your_alpha_vantage_api_key';
-
-document.addEventListener('DOMContentLoaded', loadStocks);
-
-function saveStocks() {
-    const stockSymbols = document.getElementById('stockSymbols').value;
-    localStorage.setItem('stocks', stockSymbols);
-}
-
-function loadStocks() {
-    let storedStocks = localStorage.getItem('stocks');
-    if (!storedStocks) {
-        storedStocks = 'AAPL,MSFT,NVDA,CRM';
-        localStorage.setItem('stocks', storedStocks);
-    }
-    document.getElementById('stockSymbols').value = storedStocks;
-}
+const twelveDataApiUrl = 'https://api.twelvedata.com/time_series';
 
 async function getStockData() {
-    saveStocks(); // Ensure the latest symbols are saved before fetching data
     const stockSymbols = document.getElementById('stockSymbols').value.split(',').map(symbol => symbol.trim().toUpperCase());
     const stockOutput = document.getElementById('stocks-output');
-    stockOutput.innerHTML = 'Fetching stock data...';
 
-    const promises = stockSymbols.map(symbol => fetchStockData(symbol));
-    const results = await Promise.all(promises);
+    stockOutput.textContent = 'Fetching stock data...';
 
-    stockOutput.dataset.json = JSON.stringify(results, null, 2);
-    stockOutput.dataset.formatted = results.map(result => formatStockData(result)).join('<br>');
-    stockOutput.innerHTML = stockOutput.dataset.formatted;
+    try {
+        const promises = stockSymbols.map(symbol => fetchStockData(symbol));
+        const results = await Promise.all(promises);
+
+        stockOutput.dataset.json = formatJsonStockData(results);
+        stockOutput.dataset.formatted = formatStockData(results);
+        stockOutput.innerHTML = stockOutput.dataset.formatted;
+    } catch (error) {
+        stockOutput.textContent = `Error fetching stock data: ${error.message}`;
+        console.error('Fetch error:', error);
+    }
 }
 
 async function fetchStockData(symbol) {
-    const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${alphaVantageApiKey}`;
+    const twelveDataApiKey = TWELVE_DATA_API_KEY; // Pulling from config file
+    const url = `${twelveDataApiUrl}?symbol=${symbol}&interval=1min&apikey=${twelveDataApiKey}`;
+
     const response = await fetch(url);
-    const data = await response.json();
-    
-    const timeSeries = data['Time Series (Daily)'];
-    if (!timeSeries) {
-        return { symbol, error: 'Data not available' };
+
+    if (!response.ok) {
+        throw new Error(`Error: ${response.status} ${response.statusText}`);
     }
 
-    const dates = Object.keys(timeSeries);
-    const latestDate = dates[0];
-    const previousDate = dates.find(date => {
-        const diff = new Date(latestDate).getTime() - new Date(date).getTime();
-        return diff >= 24 * 60 * 60 * 1000;
-    });
+    const data = await response.json();
+    const timeSeries = data['values'];
 
-    const latestData = timeSeries[latestDate];
-    const previousData = timeSeries[previousDate];
+    if (!timeSeries) {
+        return { symbol, error: 'Data not available', apiCall: url };
+    }
 
-    const currentPrice = parseFloat(latestData['4. close']);
-    const previousClose = parseFloat(previousData['4. close']);
+    const latestData = timeSeries[0];
+    const previousData = timeSeries[1];
+
+    const currentPrice = parseFloat(latestData['close']);
+    const previousClose = parseFloat(previousData['close']);
     const dollarChange = (currentPrice - previousClose).toFixed(2);
     const percentChange = ((dollarChange / previousClose) * 100).toFixed(2);
-
-    const previousCloseTimeframe = determineTimeframe(latestDate, previousDate);
 
     return {
         symbol,
@@ -63,39 +50,31 @@ async function fetchStockData(symbol) {
         previousClose,
         dollarChange,
         percentChange,
-        previousCloseTimeframe
+        apiCall: url
     };
 }
 
-function determineTimeframe(latestDate, previousDate) {
-    const latest = new Date(latestDate);
-    const previous = new Date(previousDate);
-    const diffInDays = (latest - previous) / (1000 * 60 * 60 * 24);
+function formatStockData(data) {
+    return data.map(stock => {
+        if (stock.error) {
+            return `<div>${stock.symbol}: ${stock.error}<br>API Call: ${stock.apiCall}</div>`;
+        }
 
-    if (diffInDays <= 1) {
-        return 'yesterday';
-    } else if (diffInDays <= 7) {
-        return 'last week';
-    } else {
-        return 'last month';
-    }
+        return `
+            <div>
+                <strong>${stock.symbol}</strong><br>
+                Current Price: $${stock.currentPrice}<br>
+                Previous Close: $${stock.previousClose}<br>
+                $ Change: $${stock.dollarChange}<br>
+                % Change: ${stock.percentChange}%<br>
+                API Call: ${stock.apiCall}
+            </div>
+        `;
+    }).join('<br>');
 }
 
-function formatStockData(data) {
-    if (data.error) {
-        return `<div>${data.symbol}: ${data.error}</div>`;
-    }
-
-    return `
-        <div>
-            <strong>${data.symbol}</strong><br>
-            Current Price: $${data.currentPrice}<br>
-            Previous Close: $${data.previousClose}<br>
-            Previous Close Timeframe: ${data.previousCloseTimeframe}<br>
-            $ Change: $${data.dollarChange}<br>
-            % Change: ${data.percentChange}%
-        </div>
-    `;
+function formatJsonStockData(data) {
+    return JSON.stringify(data, null, 2);
 }
 
 function toggleStockView() {
