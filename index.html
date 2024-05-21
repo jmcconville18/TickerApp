@@ -6,6 +6,7 @@
     <title>Weather, Stocks, and Sports Scores App</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/2.3.0/luxon.min.js"></script>
+    <script src="toggle.js" defer></script>
     <script src="config.js" defer></script>
     <script src="weather.js" defer></script>
     <script src="forecast.js" defer></script>
@@ -18,7 +19,6 @@
     <script src="sportsMMA.js" defer></script>
     <script src="sportsBoxing.js" defer></script>
     <script src="sportsPGA.js" defer></script>
-    <script src="toggle.js" defer></script>
 </head>
 <body>
     <div class="container">
@@ -35,12 +35,13 @@
         </div>
 
         <!-- Stocks Section -->
-        <div id="stocks-section">
-            <h2>Stocks and Funds</h2>
-            <input type="text" id="stockSymbols" placeholder="Enter Stock Symbols" value="AAPL,MSFT,NVDA,CRM">
-            <button onclick="getStockData()">Get Stock Data</button>
-            <button onclick="toggleStockView()">Toggle JSON/Formatted View</button>
-            <div id="stocks-output"></div>
+        <div id="stock-section">
+            <h2>Stocks</h2>
+			<label for="symbol">Stock Symbol:</label>
+			<input type="text" id="symbol" name="symbol">
+			<button onclick="getStockData()">Fetch Stock Data</button>
+             <button onclick="toggleView()">Toggle JSON/Formatted View</button>
+            <div id="output"></div>
         </div>
 
         <!-- Sports Scores Section -->

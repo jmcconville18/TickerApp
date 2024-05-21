@@ -1,112 +1,61 @@
-document.addEventListener('DOMContentLoaded', loadStocks);
-
-function saveStocks() {
-    const stockSymbols = document.getElementById('stockSymbols').value;
-    localStorage.setItem('stocks', stockSymbols);
-}
-
-function loadStocks() {
-    let storedStocks = localStorage.getItem('stocks');
-    if (!storedStocks) {
-        storedStocks = 'AAPL,MSFT,NVDA,CRM';
-        localStorage.setItem('stocks', storedStocks);
-    }
-    document.getElementById('stockSymbols').value = storedStocks;
-}
+const stockUrl = 'https://api.twelvedata.com/time_series';
 
 async function getStockData() {
-    saveStocks(); // Ensure the latest symbols are saved before fetching data
-    const stockSymbols = document.getElementById('stockSymbols').value.split(',').map(symbol => symbol.trim().toUpperCase());
-    const stockOutput = document.getElementById('stocks-output');
+    const symbol = document.getElementById('symbol').value;
+    const output = document.getElementById('output');
 
-    console.log('Fetching stock data for symbols:', stockSymbols);
-    stockOutput.textContent = 'Fetching stock data...';
+    output.textContent = 'Fetching stock data...';
+
+    const stockApiUrl = `${stockUrl}?symbol=${symbol}&interval=1day&apikey=${TWELVE_DATA_API_KEY}`;
 
     try {
-        const promises = stockSymbols.map(symbol => fetchStockData(symbol));
-        const results = await Promise.all(promises);
+        const stockResponse = await fetch(stockApiUrl);
 
-        console.log('Fetched stock data results:', results);
-        stockOutput.dataset.json = JSON.stringify(results, null, 2);
-        stockOutput.dataset.formatted = formatStockData(results);
-        console.log('Formatted data:', stockOutput.dataset.formatted);
-        console.log('JSON data:', stockOutput.dataset.json);
-        stockOutput.innerHTML = stockOutput.dataset.formatted;
+        if (!stockResponse.ok) {
+            throw new Error(`Error: ${stockResponse.status} ${stockResponse.statusText} - URL: ${stockApiUrl}`);
+        }
+
+        const stockData = await stockResponse.json();
+
+        if (!stockData || !stockData.values || stockData.values.length === 0) {
+            throw new Error('No stock data returned from the API.');
+        }
+
+        output.dataset.json = formatJsonStockData(stockData);
+        output.dataset.formatted = formatStockData(stockData);
+        output.innerHTML = output.dataset.formatted;
     } catch (error) {
-        stockOutput.textContent = `Error fetching stock data: ${error.message}`;
+        output.textContent = `Error fetching stock data: ${error.message}`;
         console.error('Fetch error:', error);
     }
 }
 
-async function fetchStockData(symbol) {
-    const twelveDataApiKey = TWELVE_DATA_API_KEY; // Pulling from config file
-    const url = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1min&apikey=${twelveDataApiKey}`;
-
-    console.log('Fetching data for URL:', url);
-    const response = await fetch(url);
-
-    if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const timeSeries = data['values'];
-
-    if (!timeSeries) {
-        return { symbol, error: 'Data not available', apiCall: url };
-    }
-
-    const latestData = timeSeries[0];
-    const previousData = timeSeries[1];
-
-    const currentPrice = parseFloat(latestData['close']);
-    const previousClose = parseFloat(previousData['close']);
-    const dollarChange = (currentPrice - previousClose).toFixed(2);
-    const percentChange = ((dollarChange / previousClose) * 100).toFixed(2);
-
-    return {
-        symbol,
-        currentPrice,
-        previousClose,
-        dollarChange,
-        percentChange,
-        apiCall: url
-    };
-}
-
 function formatStockData(data) {
-    console.log('Formatting stock data:', data);
-    return data.map(stock => {
-        if (stock.error) {
-            return `<div>${stock.symbol}: ${stock.error}<br>API Call: ${stock.apiCall}</div>`;
-        }
+    const { symbol, values } = data;
+    const latest = values[0];
 
-        return `
-            <div>
-                <strong>${stock.symbol}</strong><br>
-                Current Price: $${stock.currentPrice}<br>
-                Previous Close: $${stock.previousClose}<br>
-                $ Change: $${stock.dollarChange}<br>
-                % Change: ${stock.percentChange}%<br>
-                API Call: ${stock.apiCall}
-            </div>
-        `;
-    }).join('<br>');
+    return `
+        <h2>Stock Data for ${symbol}</h2>
+        <div class="stock-attribute"><strong>Date:</strong> ${latest.datetime}</div>
+        <div class="stock-attribute"><strong>Open:</strong> ${latest.open} USD</div>
+        <div class="stock-attribute"><strong>High:</strong> ${latest.high} USD</div>
+        <div class="stock-attribute"><strong>Low:</strong> ${latest.low} USD</div>
+        <div class="stock-attribute"><strong>Close:</strong> ${latest.close} USD</div>
+        <div class="stock-attribute"><strong>Volume:</strong> ${latest.volume}</div>
+    `;
 }
 
 function formatJsonStockData(data) {
-    return JSON.stringify(data, null, 2);
-}
+    const { symbol, values } = data;
+    const latest = values[0];
 
-function toggleStockView() {
-    const stockOutput = document.getElementById('stocks-output');
-    console.log('Toggling view. Current innerHTML:', stockOutput.innerHTML.trim());
-    console.log('Formatted data:', stockOutput.dataset.formatted);
-    console.log('JSON data:', stockOutput.dataset.json);
-
-    if (stockOutput.innerHTML.trim() === stockOutput.dataset.formatted.trim()) {
-        stockOutput.innerHTML = `<pre>${stockOutput.dataset.json}</pre>`;
-    } else {
-        stockOutput.innerHTML = stockOutput.dataset.formatted;
-    }
+    return JSON.stringify({
+        "Symbol": symbol,
+        "Date": latest.datetime,
+        "Open": `${latest.open} USD`,
+        "High": `${latest.high} USD`,
+        "Low": `${latest.low} USD`,
+        "Close": `${latest.close} USD`,
+        "Volume": latest.volume
+    }, null, 2);
 }
