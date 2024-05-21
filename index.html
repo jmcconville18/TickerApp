@@ -37,11 +37,11 @@
         <!-- Stocks Section -->
         <div id="stock-section">
             <h2>Stocks</h2>
-			<label for="symbol">Stock Symbol:</label>
-			<input type="text" id="symbol" name="symbol">
-			<button onclick="getStockData()">Fetch Stock Data</button>
-             <button onclick="toggleView()">Toggle JSON/Formatted View</button>
-            <div id="output"></div>
+            <label for="symbol">Stock Symbols (comma-separated):</label>
+            <input type="text" id="symbol" name="symbol" value="AAPL,MSFT,NVDA,CRM">
+            <button onclick="getStockData()">Fetch Stock Data</button>
+            <button onclick="toggleStockView()">Toggle JSON/Formatted View</button>
+            <div id="stocks-output"></div>
         </div>
 
         <!-- Sports Scores Section -->
