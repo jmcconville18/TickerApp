@@ -111,10 +111,6 @@ async function getPGAScores() {
             results += `<p>Current Tournament: ${currentTournament.name} (${formatDate(currentTournament.start_date)} - ${formatDate(currentTournament.end_date)})</p>`;
             results += `<p>Purse: ${formatPurse(currentTournament.prize_fund)}</p>`;
         }
-        if (nextTournament) {
-            results += `<p>Next Tournament: ${nextTournament.name} (${formatDate(nextTournament.start_date)} - ${formatDate(nextTournament.end_date)})</p>`;
-            results += `<p>Purse: ${formatPurse(nextTournament.prize_fund)}</p>`;
-        }
 
         // Fetch leaderboard for the appropriate tournament
         let leaderboardTournament = currentTournament ? currentTournament : previousTournament;
@@ -155,6 +151,11 @@ async function getPGAScores() {
             } else {
                 results += `<p>No leaderboard data found.</p>`;
             }
+        }
+
+        if (nextTournament) {
+            results += `<p>Next Tournament: ${nextTournament.name} (${formatDate(nextTournament.start_date)} - ${formatDate(nextTournament.end_date)})</p>`;
+            results += `<p>Purse: ${formatPurse(nextTournament.prize_fund)}</p>`;
         }
 
         return { formatted: results, json: leagueJson };
