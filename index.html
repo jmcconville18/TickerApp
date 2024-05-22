@@ -19,7 +19,6 @@
     <script src="sportsMMA.js" defer></script>
     <script src="sportsBoxing.js" defer></script>
     <script src="sportsPGA.js" defer></script>
-    <script src="marine.js" defer></script>
 </head>
 <body>
     <div class="container">
@@ -31,20 +30,62 @@
             <input type="text" id="zipCode" placeholder="Enter Zip Code" value="06033">
             <button onclick="getWeather()">Get Weather</button>
             <button onclick="getForecast()">Get Forecast</button>
-            <button onclick="toggleWeatherView()">Toggle JSON/Formatted View</button>
+            <button onclick="toggleView()">Toggle JSON/Formatted View</button>
             <div id="output"></div>
         </div>
 
-        <!-- Marine Data Section -->
-        <div id="marine-section">
-            <h2>Marine Data</h2>
-            <button onclick="getMarineData()">Get Marine Data</button>
-            <button onclick="toggleMarineView()">Toggle JSON/Formatted View</button>
-            <div id="marine-output"></div>
+        <!-- Stocks Section -->
+        <div id="stock-section">
+            <h2>Stocks</h2>
+            <label for="symbol">Stock Symbols (comma-separated):</label>
+            <input type="text" id="symbol" name="symbol" value="AAPL,MSFT,NVDA,CRM">
+            <button onclick="getStockData()">Fetch Stock Data</button>
+            <button onclick="toggleStockView()">Toggle JSON/Formatted View</button>
+            <div id="stocks-output"></div>
         </div>
 
-        <!-- Other sections here... -->
-
+        <!-- Sports Scores Section -->
+        <div id="sports-section">
+            <h2>Sports Scores</h2>
+            <button onclick="toggleSports()">Show/Hide Sports</button>
+            <div id="sports-options" style="display:none;">
+                <div>
+                    <input type="checkbox" id="nfl" name="leagues" value="NFL">
+                    <label for="nfl">NFL</label>
+                    <input type="text" id="nflTeams" placeholder="Enter Favorite Teams (comma separated)">
+                </div>
+                <div>
+                    <input type="checkbox" id="nba" name="leagues" value="NBA">
+                    <label for="nba">NBA</label>
+                    <input type="text" id="nbaTeams" placeholder="Enter Favorite Teams (comma separated)">
+                </div>
+                <div>
+                    <input type="checkbox" id="cfb" name="leagues" value="College Football">
+                    <label for="cfb">College Football</label>
+                    <input type="text" id="cfbTeams" placeholder="Enter Favorite Teams (comma separated)">
+                </div>
+                <div>
+                    <input type="checkbox" id="mcbb" name="leagues" value="Men's College Basketball">
+                    <label for="mcbb">Men's College Basketball</label>
+                    <input type="text" id="mcbbTeams" placeholder="Enter Favorite Teams (comma separated)">
+                </div>
+                <div>
+                    <input type="checkbox" id="mma" name="leagues" value="MMA">
+                    <label for="mma">MMA</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="boxing" name="leagues" value="Boxing">
+                    <label for="boxing">Boxing</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="pga" name="leagues" value="PGA Tour">
+                    <label for="pga">PGA Tour</label>
+                </div>
+            </div>
+            <button onclick="getSportsScores()">Get Sports Scores</button>
+            <button onclick="toggleSportsView()">Toggle JSON/Formatted View</button>
+            <div id="sports-output"></div>
+        </div>
     </div>
 </body>
 </html>
