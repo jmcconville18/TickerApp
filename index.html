@@ -19,7 +19,8 @@
     <script src="sportsMMA.js" defer></script>
     <script src="sportsBoxing.js" defer></script>
     <script src="sportsPGA.js" defer></script>
-</head>
+    <script src="marine.js" defer></script>
+	</head>
 <body>
     <div class="container">
         <h1>Weather, Stocks, and Sports Scores App</h1>
@@ -30,10 +31,16 @@
             <input type="text" id="zipCode" placeholder="Enter Zip Code" value="06033">
             <button onclick="getWeather()">Get Weather</button>
             <button onclick="getForecast()">Get Forecast</button>
-            <button onclick="toggleView()">Toggle JSON/Formatted View</button>
+            <button onclick="toggleWeatherView()">Toggle JSON/Formatted View</button>
             <div id="output"></div>
         </div>
-
+        <!-- Marine Data Section -->
+        <div id="marine-section">
+            <h2>Marine Data</h2>
+            <button onclick="getMarineData()">Get Marine Data</button>
+            <button onclick="toggleMarineView()">Toggle JSON/Formatted View</button>
+            <div id="marine-output"></div>
+        </div>
         <!-- Stocks Section -->
         <div id="stock-section">
             <h2>Stocks</h2>
