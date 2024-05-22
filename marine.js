@@ -56,6 +56,8 @@ async function getMarineData() {
     }
 }
 
+document.getElementById('getMarineDataButton').addEventListener('click', getMarineData);
+
 async function fetchMarineData(product, stationId, beginDate, endDate) {
     const apiUrl = `${marineUrl}?product=${product}&application=web_services&begin_date=${beginDate}&end_date=${endDate}&datum=MLLW&station=${stationId}&time_zone=gmt&units=english&format=json`;
 
@@ -170,7 +172,3 @@ function toggleMarineView() {
         output.innerHTML = output.dataset.formatted;
     }
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    getMarineData(); // Automatically fetch data for New Haven, CT on page load
-});
