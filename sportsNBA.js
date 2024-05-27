@@ -28,17 +28,25 @@ async function getNBAScores() {
         const gameDate = convertToEST(game.date).toISODate();
         const gameTime = convertToEST(game.date).toLocaleString(luxon.DateTime.DATETIME_SHORT);
 
-        if (gameDate === today) {
-            const homeTeam = game.competitions[0].competitors[0].team.abbreviation;
-            const awayTeam = game.competitions[0].competitors[1].team.abbreviation;
-            const status = game.status.type.name;
+        const homeTeam = game.competitions[0].competitors.find(c => c.homeAway === 'home').team.abbreviation;
+        const awayTeam = game.competitions[0].competitors.find(c => c.homeAway === 'away').team.abbreviation;
+        const status = game.status.type.name;
+        const seriesTitle = game.competitions[0].series ? game.competitions[0].series.title : '';
+        const seriesSummary = game.competitions[0].series ? game.competitions[0].series.summary : '';
 
-            if (status === 'STATUS_IN_PROGRESS') {
-                const homeScore = game.competitions[0].competitors[0].score;
-                const awayScore = game.competitions[0].competitors[1].score;
+        let playoffDetails = '';
+        if (seriesTitle) {
+            playoffDetails = `${seriesTitle}${seriesSummary ? `, ${seriesSummary}` : ''}`;
+        }
+
+        if (gameDate === today) {
+            if (status === 'STATUS_IN_PROGRESS' || status === 'STATUS_HALFTIME' || status === 'STATUS_FINAL') {
+                const homeScore = game.competitions[0].competitors.find(c => c.homeAway === 'home').score;
+                const awayScore = game.competitions[0].competitors.find(c => c.homeAway === 'away').score;
                 const period = game.status.period;
                 const clock = game.status.displayClock;
-                results += `<p>${homeTeam} vs ${awayTeam}: ${homeScore} - ${awayScore} (Period: ${period}, Time: ${clock})</p>`;
+                const gameStatus = status === 'STATUS_FINAL' ? 'Final' : `Q${period} - ${clock}`;
+                results += `<p>${awayTeam} vs ${homeTeam}: ${awayScore} - ${homeScore} (${gameStatus}${playoffDetails ? ', ' + playoffDetails : ''})</p>`;
                 leagueJson.games.push({
                     homeTeam,
                     awayTeam,
@@ -46,29 +54,30 @@ async function getNBAScores() {
                     awayScore,
                     period,
                     clock,
-                    status: 'in progress'
+                    status: status === 'STATUS_FINAL' ? 'completed' : 'in progress',
+                    playoffDetails: playoffDetails || undefined
                 });
             } else {
-                results += `<p>${homeTeam} vs ${awayTeam} at ${gameTime}</p>`;
+                results += `<p>${awayTeam} vs ${homeTeam} at ${gameTime}${playoffDetails ? ', ' + playoffDetails : ''}</p>`;
                 leagueJson.games.push({
                     homeTeam,
                     awayTeam,
                     gameTime,
-                    status: 'scheduled'
+                    status: 'scheduled',
+                    playoffDetails: playoffDetails || undefined
                 });
             }
         } else if (gameDate === yesterday) {
-            const homeTeam = game.competitions[0].competitors[0].team.abbreviation;
-            const awayTeam = game.competitions[0].competitors[1].team.abbreviation;
-            const homeScore = game.competitions[0].competitors[0].score;
-            const awayScore = game.competitions[0].competitors[1].score;
-            results += `<p>${homeTeam} ${homeScore} - ${awayTeam} ${awayScore} (Yesterday)</p>`;
+            const homeScore = game.competitions[0].competitors.find(c => c.homeAway === 'home').score;
+            const awayScore = game.competitions[0].competitors.find(c => c.homeAway === 'away').score;
+            results += `<p>${awayTeam} ${awayScore} - ${homeTeam} ${homeScore} (Yesterday${playoffDetails ? ', ' + playoffDetails : ''})</p>`;
             leagueJson.games.push({
                 homeTeam,
                 awayTeam,
                 homeScore,
                 awayScore,
-                status: 'completed'
+                status: 'completed',
+                playoffDetails: playoffDetails || undefined
             });
         }
     });
@@ -76,10 +85,10 @@ async function getNBAScores() {
     league.teams.forEach(team => {
         const game = games.find(game => game.competitions[0].competitors.some(competitor => competitor.team.abbreviation.toUpperCase() === team));
         if (game) {
-            const homeTeam = game.competitions[0].competitors[0].team.abbreviation;
-            const awayTeam = game.competitions[0].competitors[1].team.abbreviation;
+            const homeTeam = game.competitions[0].competitors.find(c => c.homeAway === 'home').team.abbreviation;
+            const awayTeam = game.competitions[0].competitors.find(c => c.homeAway === 'away').team.abbreviation;
             const gameTime = convertToEST(game.date).toLocaleString(luxon.DateTime.DATETIME_SHORT);
-            results += `<p>Next game for ${team}: ${homeTeam} vs ${awayTeam} at ${gameTime}</p>`;
+            results += `<p>Next game for ${team}: ${awayTeam} vs ${homeTeam} at ${gameTime}</p>`;
             leagueJson.games.push({
                 team,
                 homeTeam,
@@ -91,4 +100,8 @@ async function getNBAScores() {
     });
 
     return { formatted: results, json: leagueJson };
+}
+
+function convertToEST(dateString) {
+    return luxon.DateTime.fromISO(dateString, { zone: 'America/New_York' });
 }

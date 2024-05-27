@@ -1,7 +1,7 @@
 const marineUrl = 'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter';
 const supportedProducts = ['water_temperature', 'wind', 'water_level'];
-const tideProduct = 'water_level';
-const stationId = '8465705'; // Hardcoded station ID for New Haven, CT
+const tideProduct = 'predictions'; // Change this to 'predictions' for tide data
+const stationId = '8467150'; // Station ID for Bridgeport, CT
 
 async function getMarineData() {
     const output = document.getElementById('marine-output');
@@ -34,9 +34,8 @@ async function getMarineData() {
         // Fetch tide predictions
         try {
             const tideData = await fetchTideData(stationId, beginDate, endDate);
-            console.log('Raw tide data:', tideData.data);
             marineData['tides'] = {
-                data: processTideData(tideData.data),
+                data: processTideData(tideData.predictions),
                 apiUrl: tideData.apiUrl
             };
         } catch (error) {
@@ -50,13 +49,12 @@ async function getMarineData() {
         output.dataset.json = formatJsonMarineData(marineData);
         output.dataset.formatted = formatMarineData(marineData);
         output.innerHTML = output.dataset.formatted;
+        document.getElementById('toggle-button').style.display = 'inline-block'; // Show the toggle button
     } catch (error) {
         output.textContent = `Error fetching marine data: ${error.message}`;
         console.error('Fetch error:', error);
     }
 }
-
-document.getElementById('getMarineDataButton').addEventListener('click', getMarineData);
 
 async function fetchMarineData(product, stationId, beginDate, endDate) {
     const apiUrl = `${marineUrl}?product=${product}&application=web_services&begin_date=${beginDate}&end_date=${endDate}&datum=MLLW&station=${stationId}&time_zone=gmt&units=english&format=json`;
@@ -75,7 +73,7 @@ async function fetchMarineData(product, stationId, beginDate, endDate) {
 }
 
 async function fetchTideData(stationId, beginDate, endDate) {
-    const apiUrl = `${marineUrl}?product=${tideProduct}&application=web_services&begin_date=${beginDate}&end_date=${endDate}&datum=MLLW&station=${stationId}&time_zone=gmt&units=english&format=json`;
+    const apiUrl = `${marineUrl}?product=${tideProduct}&application=web_services&begin_date=${beginDate}&end_date=${endDate}&datum=MLLW&station=${stationId}&time_zone=lst_ldt&units=english&interval=hilo&format=json`;
 
     const response = await fetch(apiUrl);
 
@@ -91,42 +89,48 @@ async function fetchTideData(stationId, beginDate, endDate) {
 }
 
 function processTideData(data) {
-    console.log('Processing tide data:', data);
-    const tides = [];
-    for (let i = 1; i < data.length - 1; i++) {
-        const prev = parseFloat(data[i - 1].v);
-        const curr = parseFloat(data[i].v);
-        const next = parseFloat(data[i + 1].v);
+    const tidesByDay = {};
 
-        if (curr < prev && curr < next) {
-            tides.push({ type: 'Low Tide', time: data[i].t });
-        } else if (curr > prev && curr > next) {
-            tides.push({ type: 'High Tide', time: data[i].t });
+    data.forEach(tide => {
+        const date = new Date(tide.t);
+        const day = date.toLocaleDateString('en-US');
+        const time = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
+        const roundedValue = Math.round(tide.v * 10) / 10;
+        const label = tide.type.includes('H') ? 'H - ' : 'L - ';
+        const tideString = `${label}${time}; ${roundedValue} feet`;
+
+        if (!tidesByDay[day]) {
+            tidesByDay[day] = [];
         }
+        tidesByDay[day].push(tideString);
+    });
 
-        if (tides.length >= 4) break;
-    }
-    console.log('Processed tides:', tides);
-    return tides;
+    return tidesByDay;
 }
 
 function formatMarineData(data) {
     const windSpeedMph = data.wind?.data.s ? (data.wind.data.s * 1.15078).toFixed(2) : 'N/A';
-    const tideTimes = data.tides?.data ? formatTideTimes(data.tides.data) : 'N/A';
+    const tideSections = Object.keys(data.tides.data).map(day => {
+        const tides = data.tides.data[day].join('<br>');
+        return `<strong>${day}</strong><br>${tides}`;
+    }).join('<br><br>');
 
     return `
-        <h2>Current Marine Data for Station 8465705 (New Haven, CT)</h2>
+        <h2>Current Marine Data for Station 8467150 (Bridgeport, CT)</h2>
         <div class="marine-attribute"><strong>Water Temperature:</strong> ${data.water_temperature?.data.v || 'N/A'} °F</div>
         <div class="marine-attribute"><strong>Wind Speed:</strong> ${windSpeedMph} MPH</div>
         <div class="marine-attribute"><strong>Wind Direction:</strong> ${data.wind?.data.d || 'N/A'}°</div>
         <div class="marine-attribute"><strong>Water Level:</strong> ${data.water_level?.data.v || 'N/A'} feet</div>
-        <div class="marine-attribute"><strong>Next Tides:</strong><br>${tideTimes}</div>
+        <div class="marine-attribute"><strong>Next Tides:</strong><br>${tideSections}</div>
     `;
 }
 
 function formatJsonMarineData(data) {
     const windSpeedMph = data.wind?.data.s ? (data.wind.data.s * 1.15078).toFixed(2) : 'N/A';
-    const tideTimes = data.tides?.data ? formatTideTimes(data.tides.data) : 'N/A';
+    const tideSections = Object.keys(data.tides.data).reduce((acc, day) => {
+        acc[day] = data.tides.data[day];
+        return acc;
+    }, {});
 
     return JSON.stringify({
         "Water Temperature": {
@@ -145,19 +149,8 @@ function formatJsonMarineData(data) {
             "value": `${data.water_level?.data.v || 'N/A'} feet`,
             "apiUrl": data.water_level?.apiUrl || 'N/A'
         },
-        "Next Tides": {
-            "value": tideTimes,
-            "apiUrl": data.tides?.apiUrl || 'N/A'
-        }
+        "Next Tides": tideSections
     }, null, 2);
-}
-
-function formatTideTimes(tideData) {
-    const tides = tideData.map(tide => {
-        const estTime = new Date(tide.time).toLocaleString("en-US", { timeZone: "America/New_York", hour12: true });
-        return `${tide.type} at ${estTime}`;
-    });
-    return tides.join('<br>');
 }
 
 function formatDate(date) {

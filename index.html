@@ -20,7 +20,7 @@
     <script src="sportsBoxing.js" defer></script>
     <script src="sportsPGA.js" defer></script>
     <script src="marine.js" defer></script>
-	</head>
+</head>
 <body>
     <div class="container">
         <h1>Weather, Stocks, and Sports Scores App</h1>
@@ -38,7 +38,7 @@
         <div id="marine-section">
             <h2>Marine Data</h2>
             <button onclick="getMarineData()">Get Marine Data</button>
-            <button onclick="toggleMarineView()">Toggle JSON/Formatted View</button>
+            <button id="toggle-button" onclick="toggleMarineView()" style="display: none;">Show JSON View</button>
             <div id="marine-output"></div>
         </div>
         <!-- Stocks Section -->
