@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TickerApp</title>
+    <script>
+        async function fetchWeather() {
+            const response = await fetch('weather.json');
+            const data = await response.json();
+            document.getElementById('weather').innerText = `Temperature: ${data.main.temp}°C, Description: ${data.weather[0].description}`;
+        }
+    </script>
+</head>
+<body>
+    <button onclick="fetchWeather()">Get Weather</button>
+    <p id="weather"></p>
+</body>
+</html>
