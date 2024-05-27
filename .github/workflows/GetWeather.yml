@@ -1,0 +1,27 @@
+name: Click Get Weather Button
+
+on:
+  repository_dispatch:
+    types: [click-weather-button]
+
+jobs:
+  click-weather:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Install dependencies
+      run: npm install puppeteer
+
+    - name: Click Get Weather Button
+      run: node clickWeatherButton.js
+      env:
+        WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
+
