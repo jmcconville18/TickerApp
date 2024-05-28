@@ -50,6 +50,9 @@ async function getMarineData() {
         output.dataset.formatted = formatMarineData(marineData);
         output.innerHTML = output.dataset.formatted;
         document.getElementById('toggle-button').style.display = 'inline-block'; // Show the toggle button
+
+        // Send the data to the server to save as a JSON file
+        saveMarineData(output.dataset.json);
     } catch (error) {
         output.textContent = `Error fetching marine data: ${error.message}`;
         console.error('Fetch error:', error);
@@ -62,7 +65,7 @@ async function fetchMarineData(product, stationId, beginDate, endDate) {
     const response = await fetch(apiUrl);
 
     if (!response.ok) {
-        const error = new Error(`Error fetching ${product} data: ${response.status} ${response.statusText}`);
+        const error = new Error(`Error fetching ${product} data: ${response.status}`);
         error.apiUrl = apiUrl;
         throw error;
     }
@@ -78,7 +81,7 @@ async function fetchTideData(stationId, beginDate, endDate) {
     const response = await fetch(apiUrl);
 
     if (!response.ok) {
-        const error = new Error(`Error fetching tide data: ${response.status} ${response.statusText}`);
+        const error = new Error(`Error fetching tide data: ${response.status}`);
         error.apiUrl = apiUrl;
         throw error;
     }
@@ -164,4 +167,17 @@ function toggleMarineView() {
     } else {
         output.innerHTML = output.dataset.formatted;
     }
+}
+
+function saveMarineData(jsonData) {
+    fetch('https://save-ticker-json.glitch.me/save-marine-data', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: jsonData
+    })
+    .then(response => response.text())
+    .then(data => console.log(data))
+    .catch(error => console.error('Error:', error));
 }
